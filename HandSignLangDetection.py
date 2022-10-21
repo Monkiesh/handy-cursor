@@ -1,5 +1,11 @@
 import cv2
 import mediapipe as mp
+import sys
+from pynput.mouse import Controller, Button
+import tkinter
+
+screen_width = tkinter.Tk().winfo_screenwidth()  # 计算机屏幕水平分辨率
+screen_height = tkinter.Tk().winfo_screenheight()  # 计算机屏幕垂直分辨率
 
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands()
@@ -14,6 +20,29 @@ like_img = cv2.resize(like_img, (200, 180))
 
 dislike_img = cv2.imread("images/dislike.png")
 dislike_img = cv2.resize(dislike_img, (200, 180))
+
+mouse = Controller()
+thumb_pos_x = [0.5, 0.5, 0.5, 0.5, 0.5] #防抖
+thumb_pos_y = [0.5, 0.5, 0.5, 0.5, 0.5]
+i_thumb = 0
+is_click = True
+
+def map_pos(x, y):
+    ans_x = 0.5
+    ans_y = 0.5
+    if (x < 0.3):
+        ans_x = 0
+    if (y < 0.3):
+        ans_y = 0
+    if (x > 0.7):
+        ans_x = 1
+    if (y > 0.7):
+        ans_y = 1
+    if (ans_x == 0.5):
+        ans_x = 2.5 * (x-0.3)
+    if (ans_y == 0.5):
+        ans_y = 2.5 * (y-0.3)
+    return ans_x * screen_width, ans_y * screen_height
 
 while True:
     ret, img = cap.read()
@@ -38,22 +67,37 @@ while True:
                 else:
                     finger_fold_status.append(False)
 
-            print(finger_fold_status)
+            #print(finger_fold_status)
 
             if all(finger_fold_status):
                 # like
                 if lm_list[thumb_tip].y < lm_list[thumb_tip - 1].y < lm_list[thumb_tip - 2].y:
-                    print("LIKE")
-                    cv2.putText(img, "LIKE", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
-                    h, w, c = like_img.shape
-                    img[35:h + 35, 30:w + 30] = like_img
-                # Dislike
-                if lm_list[thumb_tip].y > lm_list[thumb_tip - 1].y > lm_list[thumb_tip - 2].y:
-                    cv2.putText(img, "DISLIKE", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-                    print("DISLIKE")
-                    h, w, c = dislike_img.shape
-                    img[35:h + 35, 30:w + 30] = dislike_img
+                    #mouse.move((lm_list[5].x - thumb_pos_x) * 5000, (lm_list[5].y - thumb_pos_y) * 5000)
+                    
+                    if (i_thumb > 4):   #循环数组
+                        i_thumb = 0
+                    thumb_pos_x[i_thumb] = lm_list[5].x
+                    thumb_pos_y[i_thumb] = lm_list[5].y
 
+                    mouse.position = map_pos(sum(thumb_pos_x)/5, sum(thumb_pos_y)/5)
+                    i_thumb = i_thumb + 1
+                    #print(f"LIKE {mouse.position}")
+                    
+                    # Click
+                    if(abs(lm_list[thumb_tip].y - lm_list[6].y) < abs(lm_list[10].y - lm_list[6].y) and is_click):
+                        mouse.click(Button.left, 1)
+                        is_click = False
+                    else:
+                        is_click = True
+                        
+                    
+                # Dislike
+                elif lm_list[thumb_tip].y > lm_list[thumb_tip - 1].y > lm_list[thumb_tip - 2].y:
+                    print("DISLIKE")
+                    sys.exit()
+
+                
+                    
             mp_draw.draw_landmarks(img, hand_landmark,
                                    mp_hands.HAND_CONNECTIONS,
                                    mp_draw.DrawingSpec((0, 0, 255), 6, 3),

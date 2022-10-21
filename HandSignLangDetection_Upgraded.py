@@ -1,5 +1,6 @@
 import cv2
 import mediapipe as mp
+import sys
 
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands()
@@ -86,6 +87,7 @@ while True:
                 if lm_list[thumb_tip].y > lm_list[thumb_tip - 1].y > lm_list[thumb_tip - 2].y and lm_list[0].x < lm_list[3].y:
                     cv2.putText(img, "DISLIKE", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
                     print("DISLIKE")
+                    sys.exit()
                     # h, w, c = dislike_img.shape
                     # img[35:h + 35, 30:w + 30] = dislike_img
 
