@@ -15,12 +15,6 @@ cap = cv2.VideoCapture(0)
 finger_tips = [8, 12, 16, 20]
 thumb_tip = 4
 
-like_img = cv2.imread("images/like.png")
-like_img = cv2.resize(like_img, (200, 180))
-
-dislike_img = cv2.imread("images/dislike.png")
-dislike_img = cv2.resize(dislike_img, (200, 180))
-
 mouse = Controller()
 thumb_pos_x = [0.5, 0.5, 0.5, 0.5, 0.5] #防抖
 thumb_pos_y = [0.5, 0.5, 0.5, 0.5, 0.5]
